@@ -28,6 +28,10 @@ COPY model.py .
 COPY agent.py .
 COPY memory.py .
 COPY agent_endpoint.py .
+COPY start.sh .
+
+# Make startup script executable
+RUN chmod +x start.sh
 
 # Create workspace directory and non-root user for security
 RUN mkdir -p /app/workspace && \
@@ -64,5 +68,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/ || exit 1
 
-# Default command to run both MCP server and agent endpoint
-CMD ["sh", "-c", "python mcp_server.py & python agent_endpoint.py"] 
+# Use the startup script
+CMD ["./start.sh"] 
