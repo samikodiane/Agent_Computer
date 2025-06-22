@@ -44,7 +44,7 @@ USER mcpuser
 ENV MCP_WORKSPACE=/app/workspace
 ENV BROWSER_HEADLESS=true
 
-# The base URL for everything
+# The base URL for everything (will be overridden by Coolify)
 ENV MCP_SERVER_URL=https://project_id.my_domain_name.domain
 
 # LLM Configuration
@@ -61,12 +61,15 @@ ENV ANTHROPIC_API_KEY=""
 ENV OPENAI_BASE_URL=""
 ENV OPENAI_ORGANIZATION=""
 
-# Expose single port
-EXPOSE 8000
+# Use a unique default port for Coolify
+ENV PORT=8080
 
-# Health check
+# Expose the configurable port
+EXPOSE 8080
+
+# Health check with configurable port
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost:${PORT:-8080}/ || exit 1
 
 # Use the startup script
 CMD ["./start.sh"] 

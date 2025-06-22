@@ -17,7 +17,7 @@ import difflib
 
 # Environment-based configuration
 HOST = "0.0.0.0"  # Always bind to all interfaces for container deployment
-PORT = 8000  # Fixed port for container
+PORT = int(os.getenv("PORT", 8000))  # Use environment variable with fallback
 PATH = "/mcp"  # Fixed MCP path
 WORKSPACE_DIR = os.getenv("MCP_WORKSPACE", "/app/workspace")
 BROWSER_HEADLESS = os.getenv("BROWSER_HEADLESS", "true").lower() == "true"
