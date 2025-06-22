@@ -1,6 +1,6 @@
-# Coolify Deployment Guide
+# Coolify Deployment Guide - MCP Server
 
-This guide will help you deploy your Agent Server to Coolify with proper port configuration and environment variables.
+This guide will help you deploy your MCP Server to Coolify with proper port configuration.
 
 ## 🚀 Step-by-Step Deployment
 
@@ -10,7 +10,7 @@ This guide will help you deploy your Agent Server to Coolify with proper port co
 2. **Push your code:**
 ```bash
 git add .
-git commit -m "Add Coolify deployment configuration"
+git commit -m "Add simplified MCP server for Coolify deployment"
 git push origin main
 ```
 
@@ -35,39 +35,25 @@ git push origin main
 
 1. **Build Pack:** Dockerfile
 2. **Port:** `8080` (or your preferred port)
-3. **Health Check Path:** `/` (root endpoint)
+3. **Health Check Path:** `/mcp` (MCP endpoint)
 
 #### C. Environment Variables
 
 **Required Variables:**
 ```
 PORT=8080
-MCP_SERVER_URL=https://your-project-id.your-domain.com
-OPENAI_API_KEY=sk-your-openai-api-key
 ```
 
-**Optional LLM Configuration:**
+**Optional Variables:**
 ```
-LLM_PROVIDER=openai
-LLM_MODEL_NAME=gpt-3.5-turbo
-LLM_TEMPERATURE=0.7
-```
-
-**Alternative Providers:**
-```
-# For Google Gemini
-GOOGLE_API_KEY=your-google-api-key
-LLM_PROVIDER=google
-
-# For Anthropic Claude
-ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
-LLM_PROVIDER=anthropic
+MCP_WORKSPACE=/app/workspace
+BROWSER_HEADLESS=true
 ```
 
 #### D. Network Configuration
 
 1. **Port:** `8080` (must match your PORT environment variable)
-2. **Domain:** Your Coolify domain (e.g., `agent.yourdomain.com`)
+2. **Domain:** Your Coolify domain (e.g., `mcp.yourdomain.com`)
 3. **SSL:** Enable if available
 
 ### 3. Deployment
@@ -75,11 +61,11 @@ LLM_PROVIDER=anthropic
 1. **Click "Deploy"** in Coolify
 2. **Monitor the build process:**
    - Check build logs for any errors
-   - Ensure both MCP server and agent endpoint start successfully
+   - Ensure MCP server starts successfully
 
 3. **Verify deployment:**
-   - Visit your domain: `https://your-project-id.your-domain.com`
-   - You should see the API documentation
+   - Visit your domain: `https://your-project-id.your-domain.com/mcp`
+   - You should see the MCP server response
 
 ## 🔧 Troubleshooting
 
@@ -92,26 +78,12 @@ LLM_PROVIDER=anthropic
 - Update the port in Coolify's network settings
 - Ensure both match
 
-#### 2. Environment Variables Not Working
-**Problem:** API keys not recognized or wrong provider used
-**Solution:**
-- Double-check environment variable names in Coolify
-- Ensure no extra spaces or quotes
-- Restart the deployment after changing variables
-
-#### 3. Health Check Failures
+#### 2. Health Check Failures
 **Problem:** Container shows as unhealthy
 **Solution:**
 - Check container logs in Coolify dashboard
-- Verify the `/` endpoint responds correctly
-- Ensure both services start properly
-
-#### 4. MCP Server Connection Issues
-**Problem:** Agent can't connect to MCP tools
-**Solution:**
-- Verify `MCP_SERVER_URL` is set correctly
-- Ensure the URL matches your Coolify domain
-- Check that both services are running on the same port
+- Verify the `/mcp` endpoint responds correctly
+- Ensure MCP server starts properly
 
 ### Debug Commands
 
@@ -123,16 +95,11 @@ LLM_PROVIDER=anthropic
 
 #### Test Endpoints
 ```bash
-# Test root endpoint
-curl https://your-project-id.your-domain.com/
+# Test MCP endpoint
+curl https://your-project-id.your-domain.com/mcp
 
-# Test memory stats
-curl https://your-project-id.your-domain.com/memory/stats
-
-# Test agent chat
-curl -X POST https://your-project-id.your-domain.com/agent \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Hello!"}'
+# Test health check
+curl https://your-project-id.your-domain.com/mcp
 ```
 
 ## 📊 Monitoring
@@ -140,20 +107,19 @@ curl -X POST https://your-project-id.your-domain.com/agent \
 ### Health Check
 The container includes a health check that:
 - Runs every 30 seconds
-- Checks the root endpoint (`/`)
+- Checks the MCP endpoint (`/mcp`)
 - Retries 3 times before marking as unhealthy
 
 ### Logs
 Monitor these log messages:
-- `"Starting Agent Server on port 8080"`
-- `"MCP Server started successfully"`
-- `"Agent Endpoint started successfully"`
-- `"Both services are running on port 8080"`
+- `"Starting MCP Server on 0.0.0.0:8080/mcp"`
+- `"Available tools:"`
+- `"Access MCP endpoint at: http://0.0.0.0:8080/mcp"`
 
 ### Performance
-- **Memory:** ~500MB-1GB depending on usage
-- **CPU:** Low to moderate usage
-- **Storage:** SQLite database grows with conversation history
+- **Memory:** ~200-500MB depending on usage
+- **CPU:** Low usage
+- **Storage:** Minimal, only workspace files
 
 ## 🔄 Updates
 
@@ -162,7 +128,7 @@ Monitor these log messages:
 1. **Push changes to GitHub:**
 ```bash
 git add .
-git commit -m "Update deployment"
+git commit -m "Update MCP server"
 git push origin main
 ```
 
@@ -171,19 +137,12 @@ git push origin main
    - Click **"Redeploy"**
    - Monitor the build process
 
-### Environment Variable Changes
-
-1. **Update variables in Coolify dashboard**
-2. **Redeploy the application**
-3. **No code changes needed for configuration updates**
-
 ## 🎯 Best Practices
 
 1. **Use unique ports:** Avoid common ports like 3000, 8000, 8080
-2. **Secure API keys:** Never commit API keys to your repository
-3. **Monitor logs:** Regularly check container logs for issues
-4. **Test locally:** Use `test_local.py` before deploying
-5. **Backup data:** SQLite database is persistent but consider backups
+2. **Monitor logs:** Regularly check container logs for issues
+3. **Test locally:** Use `python mcp_server.py` before deploying
+4. **Backup workspace:** Consider persistent storage for important files
 
 ## 📞 Support
 
@@ -191,6 +150,6 @@ If you encounter issues:
 
 1. **Check Coolify logs** first
 2. **Verify environment variables** are set correctly
-3. **Test locally** with `python test_local.py`
+3. **Test locally** with `python mcp_server.py`
 4. **Check GitHub Actions** for build issues
 5. **Review this guide** for common solutions 

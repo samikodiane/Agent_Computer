@@ -1,13 +1,12 @@
-# Agent Server with MCP Tools and Memory
+# MCP Server with 50+ Tools
 
-A production-ready LangGraph ReAct agent with Model Context Protocol (MCP) server integration, SQLite memory persistence, and FastAPI endpoints for deployment on Coolify.
+A lightweight Model Context Protocol (MCP) server with 50+ tools for file operations, terminal commands, browser automation, system info, and more. Designed for external AI agents to connect and use via HTTP.
 
 ## 🏗️ Architecture
 
 - **MCP Server** (`mcp_server.py`) - 50+ tools via `/mcp` endpoint
-- **Agent Endpoint** (`agent_endpoint.py`) - Chat interface via `/agent` endpoint  
-- **Memory Management** (`memory.py`) - SQLite persistence via `/memory` endpoints
-- **Model Manager** (`model.py`) - Multi-provider LLM support (OpenAI, Gemini, Anthropic)
+- **Streamable HTTP Transport** - Accessible via HTTP/HTTPS
+- **Containerized** - Ready for Coolify deployment
 
 ## 🚀 Quick Start
 
@@ -20,33 +19,31 @@ pip install -r requirements.txt
 
 2. **Set environment variables:**
 ```bash
-export OPENAI_API_KEY="your-openai-key"
 export PORT=8080  # Optional: default is 8080
 ```
 
 3. **Run the server:**
 ```bash
-python agent_endpoint.py
+python mcp_server.py
 ```
 
-4. **Test the endpoints:**
+4. **Test the endpoint:**
 ```bash
-python test_local.py
+curl http://localhost:8080/mcp
 ```
 
 ### Docker Deployment
 
 1. **Build the image:**
 ```bash
-docker build -t agent-server .
+docker build -t mcp-server .
 ```
 
 2. **Run with environment variables:**
 ```bash
 docker run -p 8080:8080 \
-  -e OPENAI_API_KEY="your-key" \
   -e PORT=8080 \
-  agent-server
+  mcp-server
 ```
 
 ## ☁️ Coolify Deployment
@@ -68,117 +65,77 @@ docker run -p 8080:8080 \
 
 Set these in Coolify's Environment Variables section:
 
-**Required:**
 ```
 PORT=8080
-MCP_SERVER_URL=https://your-project-id.your-domain.com
-OPENAI_API_KEY=your-openai-api-key
-```
-
-**Optional (LLM Configuration):**
-```
-LLM_PROVIDER=openai
-LLM_MODEL_NAME=gpt-3.5-turbo
-LLM_TEMPERATURE=0.7
-```
-
-**Alternative Providers:**
-```
-# For Google Gemini
-GOOGLE_API_KEY=your-google-api-key
-LLM_PROVIDER=google
-
-# For Anthropic Claude
-ANTHROPIC_API_KEY=your-anthropic-api-key
-LLM_PROVIDER=anthropic
 ```
 
 ### 4. Network Configuration
 
-- **Port:** `8080` (or your configured port)
-- **Domain:** Your Coolify domain (e.g., `agent.yourdomain.com`)
+- **Port:** `8080` (must match your PORT environment variable)
+- **Domain:** Your Coolify domain (e.g., `mcp.yourdomain.com`)
 
-## 📡 API Endpoints
+## 📡 MCP Endpoint
 
-### Agent Chat
-```bash
-POST /agent
-{
-  "message": "Hello, what tools do you have?"
-}
+### Access Point
 ```
-
-### Memory Management
-```bash
-GET    /memory                    # Get full conversation memory
-GET    /memory/category/files     # Get memory by tool category
-GET    /memory/stats              # Get tool usage statistics
-DELETE /memory/clear              # Clear conversation memory
+GET /mcp
 ```
 
 ### Available Tool Categories
-- `files` - File system operations
-- `terminal` - Shell commands and processes
-- `browser` - Web automation
-- `system` - System info and network
-- `utility` - Math and time operations
-- `other` - Uncategorized tools
+
+- **File Operations:** `read_file`, `write_file`, `list_dir`, `delete_file`, `create_folder`, `search_files`, `zip_files`, `unzip_file`, `directory_tree`
+- **Terminal Commands:** `execute_shell_command`, `list_processes`, `kill_process`
+- **Browser Automation:** `browser_open_page`, `browser_screenshot`, `browser_click`, `browser_type`, `browser_extract`, `browser_scroll_and_extract`, `browser_fill_form`, `browser_handle_dialog`, `browser_upload_file`, `browser_get_network_requests`, `browser_execute_javascript`, `browser_get_page_info`, `browser_navigate_with_cookies`, `browser_compare_pages`, `browser_generate_accessibility_report`
+- **System Info:** `get_system_info`, `ping_host`, `download_url`, `http_request_tool`
+- **File Processing:** `search_and_replace`, `file_diff`, `format_code`
+- **Math & Time:** `math_operation`, `time_operation`, `wait_operation`
 
 ## 🔧 Configuration
 
 ### Port Configuration
-The server uses the `PORT` environment variable with a default of `8080`. You can change this in Coolify's environment variables.
+The server uses the `PORT` environment variable with a default of `8080`.
 
-### MCP Server URL
-Set `MCP_SERVER_URL` to your Coolify domain:
-```
-MCP_SERVER_URL=https://your-project-id.your-domain.com
-```
+### Workspace Directory
+Set `MCP_WORKSPACE` environment variable to control the base directory for file operations.
 
-### LLM Providers
-Supported providers with their environment variables:
+### Browser Configuration
+Set `BROWSER_HEADLESS=true` for headless browser operations.
 
-| Provider | API Key Variable | Base URL Variable |
-|----------|------------------|-------------------|
-| OpenAI   | `OPENAI_API_KEY` | `OPENAI_BASE_URL` |
-| Google   | `GOOGLE_API_KEY` | - |
-| Anthropic| `ANTHROPIC_API_KEY` | - |
+## 🛠️ External AI Agent Integration
 
-## 🛠️ Troubleshooting
+### Using with LangGraph
+```python
+from langchain_mcp_adapters.client import MultiServerMCPClient
 
-### Common Issues
+client = MultiServerMCPClient({
+    "mcp_server": {
+        "url": "https://your-mcp-server.com/mcp",
+        "transport": "streamable_http",
+    }
+})
 
-1. **Port conflicts:** Change the `PORT` environment variable in Coolify
-2. **Environment variables not working:** Ensure they're set in Coolify's Environment Variables section
-3. **Health check failures:** Check the container logs in Coolify dashboard
-
-### Debug Commands
-
-```bash
-# Test locally
-python test_local.py
-
-# Check container logs
-docker logs your-container-name
-
-# Test endpoints
-curl http://localhost:8080/
-curl http://localhost:8080/memory/stats
+tools = await client.get_tools()
 ```
 
-## 📊 Features
+### Using with OpenAI Function Calling
+```python
+import requests
 
-- ✅ **50+ MCP Tools** - File system, terminal, browser automation, system info
-- ✅ **SQLite Memory** - Persistent conversation history with tool categorization
-- ✅ **Multi-LLM Support** - OpenAI, Google Gemini, Anthropic Claude
-- ✅ **Production Ready** - Health checks, proper logging, security measures
-- ✅ **Coolify Optimized** - Environment variable configuration, unique port
-- ✅ **API Endpoints** - RESTful interface for chat and memory management
+response = requests.get("https://your-mcp-server.com/mcp")
+tools = response.json()
+```
 
 ## 🔒 Security
 
 - Non-root container user
 - Dangerous command blacklist
 - Environment variable configuration
-- CORS middleware for web access
-- Input validation and error handling 
+- Input validation and error handling
+
+## 📊 Features
+
+- ✅ **50+ MCP Tools** - Comprehensive toolset for automation
+- ✅ **Streamable HTTP** - Easy integration with any AI agent
+- ✅ **Production Ready** - Health checks, proper logging, security measures
+- ✅ **Coolify Optimized** - Environment variable configuration, unique port
+- ✅ **Lightweight** - Minimal dependencies, fast startup 

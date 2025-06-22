@@ -983,4 +983,11 @@ def wait_operation(seconds: float, mode: str = "blocking") -> str:
 
 if __name__ == "__main__":
     print(f"Starting MCP Server on {HOST}:{PORT}{PATH}")
+    print("Available tools:")
+    print("  - File operations (read_file, write_file, list_dir, etc.)")
+    print("  - Terminal commands (execute_shell_command)")
+    print("  - Browser automation (browser_open_page, browser_screenshot, etc.)")
+    print("  - System info (get_system_info, ping_host, etc.)")
+    print("  - Math and time operations")
+    print(f"Access MCP endpoint at: http://{HOST}:{PORT}{PATH}")
     mcp.run(transport="streamable-http", host=HOST, port=PORT, path=PATH) 

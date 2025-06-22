@@ -1,23 +1,5 @@
-# Core dependencies
+# Core MCP server dependencies only
 fastmcp
 playwright
 requests
-psutil
-fastapi
-uvicorn
-
-# LangGraph and LangChain - Fixed versions for compatibility
-langgraph==0.1.17
-langgraph-checkpoint==2.0.25
-langgraph-prebuilt>=0.1.8
-langgraph-sdk>=0.1.66
-langchain
-langchain-core
-langchain-community
-langchain-openai
-langchain-google-genai
-langchain-anthropic
-
-# MCP integration
-langchain-mcp-adapters
-mcp 
+psutil 
