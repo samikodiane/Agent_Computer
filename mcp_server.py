@@ -16,9 +16,9 @@ import time
 import difflib
 
 # Environment-based configuration
-HOST = os.getenv("MCP_HOST", "0.0.0.0")  # Use 0.0.0.0 for container deployment
-PORT = int(os.getenv("MCP_PORT", "8000"))
-PATH = os.getenv("MCP_PATH", "/mcp")
+HOST = "0.0.0.0"  # Always bind to all interfaces for container deployment
+PORT = 8000  # Fixed port for container
+PATH = "/mcp"  # Fixed MCP path
 WORKSPACE_DIR = os.getenv("MCP_WORKSPACE", "/app/workspace")
 BROWSER_HEADLESS = os.getenv("BROWSER_HEADLESS", "true").lower() == "true"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
@@ -982,4 +982,5 @@ def wait_operation(seconds: float, mode: str = "blocking") -> str:
         raise ValueError("mode must be 'blocking' or 'async'")
 
 if __name__ == "__main__":
+    print(f"Starting MCP Server on {HOST}:{PORT}{PATH}")
     mcp.run(transport="streamable-http", host=HOST, port=PORT, path=PATH) 

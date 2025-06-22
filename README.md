@@ -1,187 +1,214 @@
-# Local MCP Server
+# Agent Server with MCP Tools and Memory
 
-A comprehensive MCP (Model Context Protocol) server with file system, web automation, and utility tools.
+A LangGraph-based agent server with Model Context Protocol (MCP) tools integration and persistent conversation memory.
 
 ## Features
 
-### File System Tools
-- List directories and files
-- Read and write files
-- Create and delete files/folders
-- Search files by pattern
-- Get file metadata
-- Zip/unzip files
-- Directory tree visualization
+- **LangGraph ReAct Agent**: Powered by LangGraph with ReAct reasoning
+- **MCP Tools Integration**: Access to file system, browser automation, math operations, and more
+- **Persistent Memory**: SQLite-based conversation memory with chronological ordering
+- **Single Conversation**: One conversation per container (simplified for project-based deployment)
+- **Multiple LLM Providers**: Support for OpenAI, Google Gemini, and Anthropic
+- **Coolify Ready**: Designed for deployment with Coolify using subdomain structure
 
-### System Tools
-- Execute shell commands
-- Get system information
-- List and kill processes
-- Ping hosts
+## Architecture
 
-### Web Tools
-- HTTP requests
-- Web browser automation (Playwright)
-- Screenshot capture
-- Web scraping
-- Advanced browser interactions (forms, dialogs, file uploads)
-- Network request monitoring
-- Accessibility testing
+```
+┌─────────────────────────────────────┐
+│        Agent Server Container       │
+│           (Port 8000)               │
+├─────────────────────────────────────┤
+│  MCP Server (mcp_server.py)         │
+│  - /mcp endpoint                    │
+│  - All MCP tools                    │
+├─────────────────────────────────────┤
+│  Agent Endpoint (agent_endpoint.py) │
+│  - /agent endpoint                  │
+│  - /memory endpoint                 │
+└─────────────────────────────────────┘
+```
 
-### Utility Tools
-- Math operations
-- Time operations
-- Search and replace in files
-- File diffing
-- Code formatting
+## Quick Start
 
-## Installation
+### 1. Set Environment Variables
 
-### Local Installation
+```bash
+# LLM Configuration
+export LLM_PROVIDER=openai  # openai, google, anthropic
+export LLM_MODEL_NAME=gpt-3.5-turbo
+export LLM_TEMPERATURE=0.7
 
-1. Install the required packages:
+# API Keys (set your preferred provider)
+export OPENAI_API_KEY="your-openai-key"
+export GOOGLE_API_KEY="your-google-key"
+export ANTHROPIC_API_KEY="your-anthropic-key"
+```
+
+### 2. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
+playwright install chromium
 ```
 
-2. Install Playwright browsers:
-```bash
-playwright install
-```
-
-### Docker Installation (Recommended)
-
-Build and run the container:
-```bash
-# Build the image
-docker build -t mcp-server .
-
-# Run the container
-docker run -p 8000:8000 mcp-server
-```
-
-For development with volume mounting:
-```bash
-docker run -p 8000:8000 -v $(pwd)/workspace:/app/workspace mcp-server
-```
-
-### Coolify Deployment (Recommended for Production)
-
-This MCP server is optimized for deployment with Coolify and supports subdomain routing.
-
-#### 1. Build and Push the Image
+### 3. Run the Server
 
 ```bash
-# Build the image
-docker build -t mcp-server .
-
-# Tag for your registry (replace with your registry)
-docker tag mcp-server your-registry.com/mcp-server:latest
-
-# Push to registry
-docker push your-registry.com/mcp-server:latest
+# Run both MCP server and agent endpoint
+python mcp_server.py &
+python agent_endpoint.py
 ```
 
-#### 2. Coolify Configuration
+Or use Docker:
 
-In Coolify, create a new application with these settings:
-
-**Basic Settings:**
-- **Name**: `mcp-server`
-- **Image**: `your-registry.com/mcp-server:latest`
-- **Port**: `8000`
-
-**Environment Variables:**
 ```bash
-MCP_HOST=0.0.0.0
-MCP_PORT=8000
-MCP_PATH=/mcp
-MCP_WORKSPACE=/app/workspace
-BROWSER_HEADLESS=true
-LOG_LEVEL=INFO
+docker build -t agent-server .
+docker run -p 8000:8000 \
+  -e OPENAI_API_KEY="your-key" \
+  agent-server
 ```
 
-**Domain Configuration:**
-- **Subdomain**: `mcp` (or your preferred subdomain)
-- **Domain**: `your-domain.com`
-- **SSL**: Enable automatic SSL certificates
+## API Endpoints
 
-**Volumes:**
-- **Source**: `mcp-workspace`
-- **Destination**: `/app/workspace`
+All endpoints are available on the same port (8000):
 
-**Health Check:**
-- **Path**: `/mcp`
-- **Interval**: `30s`
-- **Timeout**: `10s`
-- **Retries**: `3`
+### Root Info
+```bash
+GET /
+```
 
-#### 3. Access Your MCP Server
+### Chat with Agent
+```bash
+POST /agent
+{
+  "message": "What's the weather like today?"
+}
+```
 
-Once deployed, your MCP server will be available at:
-- **URL**: `https://mcp.your-domain.com/mcp`
-- **Health Check**: `https://mcp.your-domain.com/mcp`
+### Get Conversation Memory
+```bash
+GET /memory
+```
+
+### Clear Memory
+```bash
+DELETE /memory
+```
+
+### MCP Server
+```bash
+/mcp - MCP server endpoint for tool access
+```
+
+## MCP Tools Available
+
+The agent has access to various tools through the MCP server:
+
+### File System Operations
+- `list_dir` - List files and directories
+- `read_file` - Read file contents
+- `write_file` - Write content to files
+- `delete_file` - Delete files
+- `create_folder` - Create directories
+- `search_files` - Search for files by pattern
+
+### Browser Automation (Playwright)
+- `browser_open_page` - Open web pages
+- `browser_screenshot` - Take screenshots
+- `browser_click` - Click elements
+- `browser_type` - Type text into forms
+- `browser_extract` - Extract data from pages
+
+### System Operations
+- `execute_shell_command` - Run shell commands (with safety checks)
+- `get_system_info` - Get system information
+- `list_processes` - List running processes
+
+### Network Operations
+- `http_request_tool` - Make HTTP requests
+- `ping_host` - Ping remote hosts
+- `download_url` - Download files from URLs
+
+### Math and Time
+- `math_operation` - Perform mathematical operations
+- `time_operation` - Handle date/time operations
+
+## Memory System
+
+The memory system stores all conversation elements in chronological order:
+- User messages
+- Agent responses  
+- Tool calls and results
+
+Each container maintains a single conversation thread, making it perfect for project-based deployments.
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MCP_HOST` | `0.0.0.0` | Host to bind the server to |
-| `MCP_PORT` | `8000` | Port to run the server on |
-| `MCP_PATH` | `/mcp` | URL path for the MCP endpoint |
-| `MCP_WORKSPACE` | `/app/workspace` | Directory for file operations |
-| `BROWSER_HEADLESS` | `true` | Run browser in headless mode |
-| `LOG_LEVEL` | `INFO` | Logging level |
+### Required for LLM
+- `LLM_PROVIDER`: Provider to use (openai, google, anthropic)
+- `LLM_MODEL_NAME`: Model name for the selected provider
+- `LLM_TEMPERATURE`: Temperature setting (0.0-1.0)
 
-## Usage
+### Required API Keys (set one based on provider)
+- `OPENAI_API_KEY`: OpenAI API key
+- `GOOGLE_API_KEY`: Google API key  
+- `ANTHROPIC_API_KEY`: Anthropic API key
 
-### Local
-```bash
-python mcp_server.py
+### Optional Provider Settings
+- `OPENAI_BASE_URL`: Custom OpenAI base URL
+- `OPENAI_ORGANIZATION`: OpenAI organization ID
+
+## Coolify Deployment
+
+### URL Structure
+When deployed with Coolify, your server will be available at:
+```
+project_id.my_domain_name.domain
 ```
 
-### Docker
-The server will start on `http://127.0.0.1:8000/mcp` when using Docker.
+### Environment Variables for Coolify
+Set these in your Coolify project:
+```bash
+# Required
+LLM_PROVIDER=openai
+OPENAI_API_KEY=your-openai-key
 
-### Coolify
-The server will be available at your configured subdomain, e.g., `https://mcp.your-domain.com/mcp`
+# Optional
+LLM_MODEL_NAME=gpt-3.5-turbo
+LLM_TEMPERATURE=0.7
+```
 
-## Container Features
+### Access Endpoints
+- `https://project_id.my_domain_name.domain/` - Root info
+- `https://project_id.my_domain_name.domain/agent` - Agent chat
+- `https://project_id.my_domain_name.domain/memory` - Memory management
+- `https://project_id.my_domain_name.domain/mcp` - MCP tools
 
-- **Cross-platform compatibility**: Works on Linux, macOS, and Windows
-- **Security**: Runs as non-root user
-- **Health checks**: Automatic monitoring
-- **Volume mounting**: Optional workspace directory
-- **Browser automation**: Full Playwright support in containerized environment
-- **Environment-based configuration**: Flexible deployment options
-- **Subdomain support**: Optimized for reverse proxy setups
+## Security Notes
 
-## Security
+- Shell commands are filtered to prevent dangerous operations
+- File operations are restricted to the workspace directory
+- API keys should be stored securely as environment variables
+- Consider using secrets management in production
 
-The server includes path safety checks to prevent access outside the allowed base directory. All file operations are restricted to the specified workspace directory.
+## Testing
 
-## Browser Automation in Docker
+Run the test script to verify everything works:
 
-The Docker setup includes:
-- Chromium browser for web automation
-- All necessary system dependencies
-- Proper user permissions for browser operations
-- Health checks to ensure the server is running correctly
+```bash
+python test_agent.py
+```
 
-## Coolify Integration Benefits
+## Troubleshooting
 
-1. **Automatic SSL**: Coolify handles SSL certificates automatically
-2. **Subdomain Routing**: Each container gets its own subdomain
-3. **Health Monitoring**: Built-in health checks ensure service availability
-4. **Persistent Storage**: Workspace volume persists across container restarts
-5. **Easy Scaling**: Simple to scale horizontally if needed
-6. **Environment Management**: Easy environment variable management through Coolify UI
+### Common Issues
 
-## Dependencies
+1. **Server Connection Failed**: Ensure the server is running on port 8000
+2. **Memory Database Error**: Check SQLite permissions in container
+3. **API Key Issues**: Ensure correct environment variables are set
 
-- `fastmcp`: MCP server framework
-- `playwright`: Web browser automation
-- `requests`: HTTP requests
-- `psutil`: Cross-platform process management
-
-All other dependencies are part of Python's standard library. 
+### Logs
+Check container logs for detailed error information:
+```bash
+docker logs agent-server
+``` 

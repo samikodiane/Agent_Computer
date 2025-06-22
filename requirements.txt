@@ -1,4 +1,22 @@
+# Core dependencies
+fastapi
+uvicorn
+pydantic
+
+# LangGraph and LangChain
+langgraph
+langchain
+langchain-core
+langchain-openai
+langchain-anthropic
+langchain-google-genai
+langchain-mcp-adapters
+
+# MCP server dependencies
 fastmcp
 playwright
 requests
-psutil 
+psutil
+
+# Database
+sqlite3  # Built-in with Python 
