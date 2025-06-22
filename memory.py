@@ -5,7 +5,7 @@ import json
 import sqlite3
 from typing import List, Dict, Any
 from datetime import datetime
-from langgraph.checkpoint import SqliteSaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 
 class MemoryManager:
