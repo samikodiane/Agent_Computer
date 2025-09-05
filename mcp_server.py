@@ -17,7 +17,7 @@ import difflib
 
 # Environment-based configuration
 HOST = "0.0.0.0"  # Always bind to all interfaces for container deployment
-PORT = int(os.getenv("PORT", 8000))  # Use environment variable with fallback
+PORT = int(os.getenv("PORT", 8080))  # Use environment variable with fallback
 PATH = "/mcp"  # Fixed MCP path
 WORKSPACE_DIR = os.getenv("MCP_WORKSPACE", "/app/workspace")
 BROWSER_HEADLESS = os.getenv("BROWSER_HEADLESS", "true").lower() == "true"
@@ -990,4 +990,5 @@ if __name__ == "__main__":
     print("  - System info (get_system_info, ping_host, etc.)")
     print("  - Math and time operations")
     print(f"Access MCP endpoint at: http://{HOST}:{PORT}{PATH}")
-    mcp.run(transport="streamable-http", host=HOST, port=PORT, path=PATH) 
+    print("Transport: Server-Sent Events (SSE)")
+    mcp.run(transport="sse", host=HOST, port=PORT, path=PATH) 

@@ -1,11 +1,11 @@
 # MCP Server with 50+ Tools
 
-A lightweight Model Context Protocol (MCP) server with 50+ tools for file operations, terminal commands, browser automation, system info, and more. Designed for external AI agents to connect and use via HTTP.
+A lightweight Model Context Protocol (MCP) server with 50+ tools for file operations, terminal commands, browser automation, system info, and more. Designed for external AI agents to connect and use via Server-Sent Events (SSE).
 
 ## 🏗️ Architecture
 
 - **MCP Server** (`mcp_server.py`) - 50+ tools via `/mcp` endpoint
-- **Streamable HTTP Transport** - Accessible via HTTP/HTTPS
+- **Server-Sent Events (SSE)** - Real-time streaming via HTTP/HTTPS
 - **Containerized** - Ready for Coolify deployment
 
 ## 🚀 Quick Start
@@ -81,6 +81,8 @@ PORT=8080
 GET /mcp
 ```
 
+**Transport:** Server-Sent Events (SSE) - Real-time streaming with automatic reconnection
+
 ### Available Tool Categories
 
 - **File Operations:** `read_file`, `write_file`, `list_dir`, `delete_file`, `create_folder`, `search_files`, `zip_files`, `unzip_file`, `directory_tree`
@@ -110,7 +112,7 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 client = MultiServerMCPClient({
     "mcp_server": {
         "url": "https://your-mcp-server.com/mcp",
-        "transport": "streamable_http",
+        "transport": "sse",
     }
 })
 
@@ -135,7 +137,7 @@ tools = response.json()
 ## 📊 Features
 
 - ✅ **50+ MCP Tools** - Comprehensive toolset for automation
-- ✅ **Streamable HTTP** - Easy integration with any AI agent
+- ✅ **Server-Sent Events (SSE)** - Real-time streaming with auto-reconnection
 - ✅ **Production Ready** - Health checks, proper logging, security measures
 - ✅ **Coolify Optimized** - Environment variable configuration, unique port
 - ✅ **Lightweight** - Minimal dependencies, fast startup 

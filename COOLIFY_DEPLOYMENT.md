@@ -1,125 +1,126 @@
-# Coolify Deployment Guide - MCP Server
+# Coolify Deployment Guide for MCP Server
 
-This guide will help you deploy your MCP Server to Coolify with proper port configuration.
+This guide helps you deploy the MCP Server to Coolify using Server-Sent Events (SSE) transport.
 
-## 🚀 Step-by-Step Deployment
+## 🚀 Quick Deployment
 
 ### 1. GitHub Repository Setup
 
-1. **Create a new GitHub repository**
-2. **Push your code:**
-```bash
-git add .
-git commit -m "Add simplified MCP server for Coolify deployment"
-git push origin main
-```
-
-3. **Monitor GitHub Actions:**
-   - Go to your repository's **Actions** tab
-   - The workflow will build and push to `ghcr.io/your-username/your-repo-name`
+1. **Push your code to GitHub** (if not already done)
+2. **GitHub Actions** will automatically build and push to GHCR
 
 ### 2. Coolify Configuration
 
-#### A. Create New Application
+1. **Create New Service** → **Application** → **Dockerfile**
+2. **Repository:** Your GitHub repository URL
+3. **Branch:** `main`
+4. **Base Directory:** `/` (root)
+5. **Port:** `8080` (or your preferred port)
 
-1. **In Coolify Dashboard:**
-   - Click **"New Service"** → **"Application"**
-   - Select **"Dockerfile"** as build pack
+### 3. Environment Variables
 
-2. **Repository Settings:**
-   - **Repository URL:** `https://github.com/your-username/your-repo-name`
-   - **Branch:** `main`
-   - **Base Directory:** `/` (root directory)
+Set these in Coolify's Environment Variables section:
 
-#### B. Build Configuration
-
-1. **Build Pack:** Dockerfile
-2. **Port:** `8080` (or your preferred port)
-3. **Health Check Path:** `/mcp` (MCP endpoint)
-
-#### C. Environment Variables
-
-**Required Variables:**
 ```
 PORT=8080
-```
-
-**Optional Variables:**
-```
 MCP_WORKSPACE=/app/workspace
 BROWSER_HEADLESS=true
+LOG_LEVEL=INFO
 ```
 
-#### D. Network Configuration
+### 4. Network Configuration
 
-1. **Port:** `8080` (must match your PORT environment variable)
-2. **Domain:** Your Coolify domain (e.g., `mcp.yourdomain.com`)
-3. **SSL:** Enable if available
+- **Port:** `8080` (must match your PORT environment variable)
+- **Domain:** Your Coolify domain (e.g., `mcp.yourdomain.com`)
 
-### 3. Deployment
+## 📡 MCP Endpoint Access
 
-1. **Click "Deploy"** in Coolify
-2. **Monitor the build process:**
-   - Check build logs for any errors
-   - Ensure MCP server starts successfully
+### SSE Endpoint
+```
+GET https://your-domain.com/mcp
+```
 
-3. **Verify deployment:**
-   - Visit your domain: `https://your-project-id.your-domain.com/mcp`
-   - You should see the MCP server response
+**Transport:** Server-Sent Events (SSE) - Real-time streaming with automatic reconnection
 
-## 🔧 Troubleshooting
+### Testing the Endpoint
+```bash
+curl -H "Accept: text/event-stream" https://your-domain.com/mcp
+```
+
+## 🔧 Manual Docker Deployment
+
+If you prefer to build and push manually:
+
+### 1. Build and Tag
+```bash
+docker build -t ghcr.io/yourusername/mcp-server:latest .
+```
+
+### 2. Login to GHCR
+```bash
+echo $GITHUB_TOKEN | docker login ghcr.io -u yourusername --password-stdin
+```
+
+### 3. Push to GHCR
+```bash
+docker push ghcr.io/yourusername/mcp-server:latest
+```
+
+### 4. Coolify Configuration
+- **Image:** `ghcr.io/yourusername/mcp-server:latest`
+- **Port:** `8080`
+- **Environment Variables:** As listed above
+
+## 🛠️ External AI Agent Integration
+
+### LangGraph Integration
+```python
+from langchain_mcp_adapters.client import MultiServerMCPClient
+
+client = MultiServerMCPClient({
+    "mcp_server": {
+        "url": "https://your-domain.com/mcp",
+        "transport": "sse",
+    }
+})
+
+tools = await client.get_tools()
+```
+
+### Direct SSE Connection
+```javascript
+const eventSource = new EventSource('https://your-domain.com/mcp');
+
+eventSource.onmessage = function(event) {
+    console.log('Received:', event.data);
+};
+
+eventSource.onerror = function(error) {
+    console.error('SSE Error:', error);
+};
+```
+
+## 🔒 Security Considerations
+
+- **HTTPS Required** - SSE connections should use HTTPS in production
+- **CORS Configuration** - Ensure proper CORS headers for your domain
+- **Rate Limiting** - Consider implementing rate limiting for the `/mcp` endpoint
+- **Authentication** - Add authentication if needed for your use case
+
+## 📊 Health Check
+
+The server includes health checks and will automatically restart if needed. Monitor the logs in Coolify for any issues.
+
+## 🚨 Troubleshooting
 
 ### Common Issues
 
-#### 1. Port Conflicts
-**Problem:** Container fails to start or health checks fail
-**Solution:** 
-- Change `PORT` environment variable in Coolify
-- Update the port in Coolify's network settings
-- Ensure both match
-
-#### 2. Health Check Failures
-**Problem:** Container shows as unhealthy
-**Solution:**
-- Check container logs in Coolify dashboard
-- Verify the `/mcp` endpoint responds correctly
-- Ensure MCP server starts properly
-
-### Debug Commands
-
-#### Check Container Logs
-```bash
-# In Coolify dashboard, go to your application
-# Click on "Logs" tab to see real-time logs
-```
-
-#### Test Endpoints
-```bash
-# Test MCP endpoint
-curl https://your-project-id.your-domain.com/mcp
-
-# Test health check
-curl https://your-project-id.your-domain.com/mcp
-```
-
-## 📊 Monitoring
-
-### Health Check
-The container includes a health check that:
-- Runs every 30 seconds
-- Checks the MCP endpoint (`/mcp`)
-- Retries 3 times before marking as unhealthy
+1. **Port Mismatch** - Ensure PORT environment variable matches Coolify port configuration
+2. **SSE Connection Issues** - Check that your client supports SSE transport
+3. **Browser Automation** - Ensure BROWSER_HEADLESS=true for containerized environment
 
 ### Logs
-Monitor these log messages:
-- `"Starting MCP Server on 0.0.0.0:8080/mcp"`
-- `"Available tools:"`
-- `"Access MCP endpoint at: http://0.0.0.0:8080/mcp"`
-
-### Performance
-- **Memory:** ~200-500MB depending on usage
-- **CPU:** Low usage
-- **Storage:** Minimal, only workspace files
+Check Coolify logs for detailed error messages and debugging information.
 
 ## 🔄 Updates
 
